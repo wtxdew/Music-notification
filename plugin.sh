@@ -142,9 +142,9 @@ reset () {
     popup off
 }
 
-play ()
+playpause ()
 {
-    echo "@Debug: music.sh::play()"
+    echo "@Debug: music.sh::playpause()"
     osascript -e 'tell application "Music" to playpause'
 }
 
@@ -160,7 +160,8 @@ close ()
 mouse_clicked () {
     echo "@Debug: music.sh::mouse_clicked()"
     case "$NAME" in
-        "music.cover") play
+        "music.cover") 
+            playpause
             ;;
         *) exit
             ;;
@@ -185,6 +186,8 @@ case "$SENDER" in
         echo "@Debug: music.sh::mouse_entered()"
         setup
         popup on
+        sleep 10
+        reset
         ;;
     "mouse.exited"|"mouse.exited.global")
         echo "@Debug: music.sh::mouse_exited()"
