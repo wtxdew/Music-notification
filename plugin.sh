@@ -1,4 +1,6 @@
 #!/bin/bash
+isDebug=false
+# isDebug=true
 
 source "$HOME/.config/sketchybar/colors.sh" # Loads all defined colors
 source "$HOME/.config/sketchybar/addone/music/config.sh" # Loads all defined variables
@@ -7,6 +9,7 @@ source "$HOME/.config/sketchybar/addone/music/config.sh" # Loads all defined var
 function get_length() {
   local input_string="$1"
   local ascii_string="$(echo "$input_string" | gsed -e 's/[^\x00-\x7f]/XX/g')"
+  local ascii_string="$(echo "$ascii_string" | gsed -e 's/XXXX/XXX/g')"
   echo ${#ascii_string}
 }
 
@@ -37,6 +40,7 @@ function get_ratio_to_800px() {
     echo $ratio
 }
 
+
 ###
 update ()
 {
@@ -66,16 +70,16 @@ update ()
     ARTIST=$(osascript -e 'tell application "Music" to get artist of current track')
     ALBUM=$(osascript -e 'tell application "Music" to get album of current track')
 
-    if [ "$TRACK" = "$CONNECTING_MSG" ]; then
+    if [ "$TRACK" = "$CONNECTING_MSG" ] || [ "$TRACK" = "" ] ; then
         echo " update(): Connecting to iTunes... retrying in 1 second"
         sleep 1
         update
         exit
     fi
 
-    TRACK=$(shorten_string "$TRACK" 24)
-    ARTIST=$(shorten_string "$ARTIST" 31)
-    ALBUM=$(shorten_string "$ALBUM" 31)
+    TRACK=$(shorten_string "$TRACK" 18)
+    ARTIST=$(shorten_string "$ARTIST" 23)
+    ALBUM=$(shorten_string "$ALBUM" 23)
 
     echo "==========================="
     echo "RUNNING:      $RUNNING"
@@ -135,6 +139,7 @@ setup() {
 
 ###
 reset () {
+    $isDebug && exit
     sleep $KEEP_SHOWING_TIME
     sketchybar --animate tanh 20 --set music\
                             popup.background.color=0x00000000\
@@ -204,6 +209,31 @@ case "$SENDER" in
         ;;
     *)
         echo "@Debug: music.sh::DEFAULT()"
-        update
+        $isDebug && debug_func || update
         ;;
 esac
+
+debug_func () {
+    echo "@Debug: music.sh::debug_func()"
+    # args+=( --set music.cover background.image=$COVER )
+    # args+=( --set music.cover background.image.scale=$scale)
+    TRACK="ABCDEFGHIJKLMN"
+    # ARTIS="あいうえおかきくけこさしすせ" # 14 (41px)
+    # ARTIS="11111111111111111111111111111111" # 32 (18px)
+    # ARTIS="--------------------------------" # 32 (18px)
+    # ARTIS="___________________________" # 27 (21px)
+    # ARTIS="99999999999999999999999" # 23 (25px)
+    # ARTIS="A                                                    V" # 52 (10px)
+    # ARTIS="一二三ABCDEFあい   ESDFSう"
+    # ALBUM="ABCDEFGHIJKLMNOPQRSTUV" # 22 (26px)= 572px
+    ARTIS="ABCDEFGHIJKLMNOPQRSTUV" # 22 (26px)= 572px
+    ALBUM="U.N.オーエンは彼女なのか?" # 22 (26px)= 572px
+    args+=( --set music.title   label="$TRACK"   drawing=on \
+            --set music.artist  label="$ARTIS"  drawing=on \
+            --set music.album   label="$ALBUM"   drawing=on )
+    args+=( --set music drawing=on )
+
+    sketchybar "${args[@]}"
+    setup
+    popup on
+}
