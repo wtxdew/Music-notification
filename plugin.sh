@@ -1,13 +1,16 @@
 #!/bin/bash
 
 source "$HOME/.config/sketchybar/colors.sh" # Loads all defined colors
+source "$HOME/.config/sketchybar/addone/music/config.sh" # Loads all defined variables
 
+###
 function get_length() {
   local input_string="$1"
   local ascii_string="$(echo "$input_string" | gsed -e 's/[^\x00-\x7f]/XX/g')"
   echo ${#ascii_string}
 }
 
+###
 function shorten_string() {
   local string="$1"
   local max_length="$2"
@@ -24,6 +27,7 @@ function shorten_string() {
   echo $string
 }
 
+###
 function get_ratio_to_800px() {
     local cover="$1"
     W=$( sips -g pixelWidth  $cover | awk '/pixelWidth/{print $2}' )
@@ -33,10 +37,10 @@ function get_ratio_to_800px() {
     echo $ratio
 }
 
+###
 update ()
 {
     # connecting_msg is dependent on the language of system
-    connecting_msg="正在連線⋯"
     echo "@Debug: music.sh::update()"
     RUNNING=$(osascript -e 'application "Music" is running')
     if ! $RUNNING ; then
@@ -62,14 +66,13 @@ update ()
     ARTIST=$(osascript -e 'tell application "Music" to get artist of current track')
     ALBUM=$(osascript -e 'tell application "Music" to get album of current track')
 
-    if [ "$TRACK" = "$connecting_msg" ]; then
+    if [ "$TRACK" = "$CONNECTING_MSG" ]; then
         echo " update(): Connecting to iTunes... retrying in 1 second"
         sleep 1
         update
         exit
     fi
 
-    # if track length is greater than 23, truncate it
     TRACK=$(shorten_string "$TRACK" 24)
     ARTIST=$(shorten_string "$ARTIST" 31)
     ALBUM=$(shorten_string "$ALBUM" 31)
@@ -87,7 +90,7 @@ update ()
     osascript "$HOME/.config/sketchybar/addone/music/get_artwork.scpt"
     COVER="/tmp/cover.jpg"
     ratio=$( get_ratio_to_800px $COVER )
-    scale=$( echo "scale=4; $ratio*0.2" | bc )
+    scale=$( echo "scale=4; $ratio*$PRE_SCALE" | bc )
 
     args+=( --set music.cover background.image=$COVER )
     args+=( --set music.cover background.image.scale=$scale)
@@ -119,35 +122,39 @@ update ()
     reset
 }
 
+###
 setup() {
     sketchybar --animate tanh 20 \
                 --set music \
-                            popup.background.border_color=$POPUP_BORDER_COLOR \
-                            popup.background.color=$POPUP_BACKGROUND_COLOR    \
+                        popup.background.border_color=$POPUP_BORDER_COLOR \
+                        popup.background.color=$POPUP_BACKGROUND_COLOR    \
                 --set music.title  label.color=$LABEL_COLOR \
                 --set music.artist label.color=$LABEL_COLOR \
                 --set music.album  label.color=$LABEL_COLOR
 }
 
+###
 reset () {
-    sleep 3
+    sleep $KEEP_SHOWING_TIME
     sketchybar --animate tanh 20 --set music\
-                        popup.background.color=0x00000000\
-                        popup.background.border_color=0x00000000\
-        --set music.title  label.color=0x00000000\
-        --set music.artist label.color=0x00000000\
-        --set music.album  label.color=0x00000000
+                            popup.background.color=0x00000000\
+                            popup.background.border_color=0x00000000\
+        --set music.title   label.color=0x00000000\
+        --set music.artist  label.color=0x00000000\
+        --set music.album   label.color=0x00000000
 
     sleep 0.2
     popup off
 }
-
+    
+###
 playpause ()
 {
     echo "@Debug: music.sh::playpause()"
     osascript -e 'tell application "Music" to playpause'
 }
 
+###
 close ()
 {
     echo "@Debug: music.sh::close()"
@@ -157,6 +164,7 @@ close ()
     exit 0
 }
 
+###
 mouse_clicked () {
     echo "@Debug: music.sh::mouse_clicked()"
     case "$NAME" in
@@ -168,6 +176,7 @@ mouse_clicked () {
     esac
 }
 
+###
 popup () {
     sketchybar --set music popup.drawing=$1
 }
@@ -186,7 +195,7 @@ case "$SENDER" in
         echo "@Debug: music.sh::mouse_entered()"
         setup
         popup on
-        sleep 10
+        sleep $ENTER_TIMEOUT
         reset
         ;;
     "mouse.exited"|"mouse.exited.global")

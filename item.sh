@@ -1,11 +1,11 @@
+source "$HOME/.config/sketchybar/addone/music/config.sh" # Loads all defined variables
 music_event="com.apple.Music.playerInfo"
-popup_script="osascript -e 'tell application \"Music\" to activate'"
-title_script="osascript -e 'tell application \"Music\" to (reveal current track) activate'"
+goto_music_page="osascript -e 'tell application \"Music\" to (reveal current track) activate'"
 music_plugin="$HOME/.config/sketchybar/addone/music/plugin.sh"
 
 music=(
     script="$music_plugin"
-    click_script="$popup_script"
+    click_script="$goto_music_page"
     popup.horizontal=on
     popup.align=center
     popup.height=120
@@ -48,7 +48,7 @@ cover=(
     background.corner_radius=0
     background.padding_left=5
     background.padding_right=10
-    background.image.scale=0.20
+    background.image.scale=$PRE_SCALE
     background.image.drawing=on
     background.drawing=on
 )
@@ -60,7 +60,7 @@ title=(
     label.font="$FONT:Heavy:25"
     y_offset=30
     width=0
-    click_script="$title_script"
+    click_script="$goto_music_page"
 )
 
 artist=(
@@ -70,7 +70,7 @@ artist=(
     label.font="$FONT:Regular:20"
     y_offset=-13
     width=0
-    click_script="$title_script"
+    click_script="$goto_music_page"
 )
 
 album=(
@@ -80,7 +80,7 @@ album=(
     label.font="$FONT:Regular:20"
     y_offset=-40
     width=280
-    click_script="$title_script"
+    click_script="$goto_music_page"
 )
 
 sketchybar  --add   item            music           center      \
