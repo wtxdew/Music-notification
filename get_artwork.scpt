@@ -9,10 +9,11 @@ tell application "Music"
 		end tell
 		set rawData to (get raw data of artwork 1 of current track)
 	on error errStr number errorNumber
-		set theERR to "Sketchybar: Unable to retrieve track information."
-		display alert theERR message errStr & "
-				(Error Number:" & errorNumber & ")"
-		return
+		# set theERR to "Sketchybar: Unable to retrieve track information."
+		# display alert theERR message errStr & "
+		# 		(Error Number:" & errorNumber & ")"
+		# return
+        return "ERROR: getting track"
 	end try
 end tell
 
