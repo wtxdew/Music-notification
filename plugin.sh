@@ -41,6 +41,14 @@ function get_ratio_to_800px() {
     echo $ratio
 }
 
+function isPlaying() {
+    PLAYER_STATE=$(osascript -e 'tell application "Music" to get player state')
+    if [ "$PLAYER_STATE" = "playing" ]; then
+        echo true
+    else
+        echo false
+    fi
+}
 
 ###
 update ()
@@ -172,6 +180,11 @@ fade_out () {
     sketchybar --animate tanh 20 --set music popup.background.color=$TRANSPARENT
     sleep 0.7
     popup off
+
+    isPlay=$(isPlaying)
+    $isPlay && sketchybar --set music.cover icon.drawing=off 
+
+    exit
 }
 
 ###
@@ -222,8 +235,6 @@ case "$SENDER" in
         echo "@Debug: music.sh::mouse_entered()"
         setup
         popup on
-        sleep $ENTER_TIMEOUT
-        fade_out
         ;;
     "mouse.exited"|"mouse.exited.global")
         echo "@Debug: music.sh::mouse_exited()"
@@ -234,6 +245,9 @@ case "$SENDER" in
         $isDebug && debug_func || update
         ;;
 esac
+
+sleep $ENTER_TIMEOUT
+fade_out
 
 debug_func () {
     echo "@Debug: music.sh::debug_func()"

@@ -84,28 +84,6 @@ album=(
     click_script="$goto_music_page"
 )
 
-# cover_icon=(
-#     width=50
-#     background.height=50
-#     background.y_offset=9
-#     background.padding_left=-10
-#     background.padding_right=-20
-#     background.corner_radius=8
-#     background.color=$notch_bg_color
-#     background.drawing=on
-# )
-# cover_img=(
-#     width=50
-#     background.height=50
-#     background.y_offset=9
-#     background.padding_left=80
-#     background.padding_right=0
-#     background.corner_radius=8
-#     background.image=/tmp/cover.jpg
-#     background.image.scale=0.04
-#     background.image.drawing=on
-#     background.drawing=on
-# )
 mini_bg=(
     width=50
     drawing=off
@@ -115,7 +93,6 @@ mini_bg=(
     background.padding_left=0
     background.padding_right=78
     background.corner_radius=8
-    # background.color=0xaa00ff00
     background.color=$TRUE_BLACK
 )
 
@@ -130,10 +107,9 @@ mini_cover=(
     background.padding_right=23
     background.corner_radius=8
     background.color=$TRANSPARENT
-    # background.color=0xaaff0000
-    # background.image=/tmp/cover.jpg
     background.image.scale=0.035
     background.image.drawing=on
+    click_script="$goto_music_page"
 )
 
 mini_wave=(
