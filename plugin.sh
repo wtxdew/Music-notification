@@ -1,9 +1,10 @@
 #!/bin/bash
+this_dir=dev
 isDebug=false
 # isDebug=true
 
 source "$HOME/.config/sketchybar/colors.sh" # Loads all defined colors
-source "$HOME/.config/sketchybar/addone/music/config.sh" # Loads all defined variables
+source "$HOME/.config/sketchybar/addone/${this_dir}/config.sh" # Loads all defined variables
 
 ###
 function get_length() {
@@ -91,11 +92,17 @@ update ()
     echo ""
 
     args=()
-    osascript "$HOME/.config/sketchybar/addone/music/get_artwork.scpt"
+    rm -f /tmp/cover.*
+    osascript "$HOME/.config/sketchybar/addone/${this_dir}/get_artwork.scpt"
     COVER="/tmp/cover.jpg"
+    if [ -f "/tmp/cover.png" ]; then
+        COVER="/tmp/cover.png"
+    fi
+
     ratio=$( get_ratio_to_800px $COVER )
     scale=$( echo "scale=4; $ratio*$PRE_SCALE" | bc )
 
+    args+=( --set mini_cover background.image=$COVER)
     args+=( --set music.cover background.image=$COVER )
     args+=( --set music.cover background.image.scale=$scale)
 
@@ -115,15 +122,24 @@ update ()
     if ! $PLAYING ; then
         args+=( --set music.cover icon.drawing=on                  \
                                   icon.background.color=0x8a3a3a3a )
+        args+=( --set mini_bg    drawing=off)
+        args+=( --set mini_cover drawing=off)
+        args+=( --set mini_wave  drawing=off)
+        args+=( --set music icon.color=${WHITE})
+
     else
+        args+=( --set mini_bg    drawing=on)
+        args+=( --set mini_cover drawing=on)
+        args+=( --set mini_wave  drawing=on)
         args+=( --set music.cover icon.drawing=off                 \
                                   icon.background.color=0x00ffffff )
+        args+=( --set music icon.color=${notch_icon_color})
     fi
 
     sketchybar "${args[@]}"
     setup
     popup on
-    reset
+    fade_out
 }
 
 ###
@@ -138,7 +154,7 @@ setup() {
 }
 
 ###
-reset () {
+fade_out () {
     $isDebug && exit
     sleep $KEEP_SHOWING_TIME
     sketchybar --animate tanh 20 --set music\
@@ -201,11 +217,11 @@ case "$SENDER" in
         setup
         popup on
         sleep $ENTER_TIMEOUT
-        reset
+        fade_out
         ;;
     "mouse.exited"|"mouse.exited.global")
         echo "@Debug: music.sh::mouse_exited()"
-        reset
+        fade_out
         ;;
     *)
         echo "@Debug: music.sh::DEFAULT()"
