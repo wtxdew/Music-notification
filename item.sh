@@ -46,11 +46,11 @@ cover=(
     icon.padding_left=0
     updates=on
     background.corner_radius=0
+    background.color=$TRANSPARENT
+    background.height=160
     background.padding_left=5
     background.padding_right=10
     background.image.scale=$PRE_SCALE
-    background.image.drawing=on
-    background.drawing=on
 )
 
 info=(
@@ -116,7 +116,7 @@ mini_bg=(
     background.padding_right=78
     background.corner_radius=8
     # background.color=0xaa00ff00
-    background.color=$BLACK
+    background.color=$TRUE_BLACK
 )
 
 mini_cover=(
@@ -155,7 +155,7 @@ mini_wave=(
     background.padding_left=78
     background.padding_right=0
     background.corner_radius=8
-    background.color=$BLACK
+    background.color=$TRUE_BLACK
 )
 
 

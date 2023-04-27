@@ -120,20 +120,20 @@ update ()
     args+=( --set music drawing=on )
 
     if ! $PLAYING ; then
-        args+=( --set music.cover icon.drawing=on                  \
-                                  icon.background.color=0x8a3a3a3a )
-        args+=( --set mini_bg    drawing=off)
-        args+=( --set mini_cover drawing=off)
-        args+=( --set mini_wave  drawing=off)
-        args+=( --set music icon.color=${WHITE})
+        args+=( --set music         icon.color=${WHITE})
+        args+=( --set mini_bg       drawing=off)
+        args+=( --set mini_cover    drawing=off)
+        args+=( --set mini_wave     drawing=off)
+        args+=( --set music.cover   icon.drawing=on                  \
+                                    icon.background.drawing=on       )
 
     else
-        args+=( --set mini_bg    drawing=on)
-        args+=( --set mini_cover drawing=on)
-        args+=( --set mini_wave  drawing=on)
-        args+=( --set music.cover icon.drawing=off                 \
-                                  icon.background.color=0x00ffffff )
-        args+=( --set music icon.color=${notch_icon_color})
+        args+=( --set music         icon.color=${notch_icon_color})
+        args+=( --set mini_bg       drawing=on)
+        args+=( --set mini_cover    drawing=on)
+        args+=( --set mini_wave     drawing=on)
+        args+=( --set music.cover   icon.drawing=off                 \
+                                    icon.background.drawing=off    )
     fi
 
     sketchybar "${args[@]}"
@@ -145,29 +145,35 @@ update ()
 ###
 setup() {
     sketchybar --animate tanh 20 \
-                --set music \
-                        popup.background.border_color=$POPUP_BORDER_COLOR \
-                        popup.background.color=$POPUP_BACKGROUND_COLOR    \
+                --set music popup.background.color=$POPUP_BACKGROUND_COLOR    \
                 --set music.title  label.color=$LABEL_COLOR \
                 --set music.artist label.color=$LABEL_COLOR \
-                --set music.album  label.color=$LABEL_COLOR
+                --set music.album  label.color=$LABEL_COLOR \
+                --set music.cover  icon.color=$WHITE\
+                --set music.cover  icon.background.color=0x8a3a3a3a
+    sleep 0.4
+    sketchybar --set music.cover background.image.drawing=on
 }
 
 ###
 fade_out () {
     $isDebug && exit
     sleep $KEEP_SHOWING_TIME
-    sketchybar --animate tanh 20 --set music\
-                            popup.background.color=0x00000000\
-                            popup.background.border_color=0x00000000\
-        --set music.title   label.color=0x00000000\
-        --set music.artist  label.color=0x00000000\
-        --set music.album   label.color=0x00000000
-
-    sleep 0.2
+    sketchybar --animate tanh 25 --set music.title  label.color=$TRANSPARENT \
+               --animate tanh 25 --set music.artist label.color=$TRANSPARENT \
+               --animate tanh 25 --set music.album  label.color=$TRANSPARENT \
+               --animate tanh 25 --set music.cover  icon.color=$TRANSPARENT\
+               --animate tanh 25 --set music.cover  icon.background.color=$TRANSPARENT\
+               --animate tanh 25 --set music.cover  background.color=$POPUP_BACKGROUND_COLOR
+    sleep 0.4
+    sketchybar --set music.cover icon.drawing=on
+    sketchybar --set music.cover background.image.drawing=off
+    sketchybar --set music.cover background.color=$TRANSPARENT
+    sketchybar --animate tanh 20 --set music popup.background.color=$TRANSPARENT
+    sleep 0.7
     popup off
 }
-    
+
 ###
 playpause ()
 {
