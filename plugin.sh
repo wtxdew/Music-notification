@@ -7,7 +7,7 @@ source "$HOME/.config/sketchybar/colors.sh" # Loads all defined colors
 source "$HOME/.config/sketchybar/addone/${this_dir}/config.sh" # Loads all defined variables
 
 ###
-function get_length() {
+function GetLength() {
   local input_string="$1"
   local ascii_string="$(echo "$input_string" | gsed -e 's/[^\x00-\x7f]/XX/g')"
   local ascii_string="$(echo "$ascii_string" | gsed -e 's/XXXX/XXX/g')"
@@ -15,13 +15,13 @@ function get_length() {
 }
 
 ###
-function shorten_string() {
+function ShortenString() {
   local string="$1"
   local max_length="$2"
 
-  if [ $(get_length "$string") -gt $max_length ]
+  if [ $(GetLength "$string") -gt $max_length ]
   then
-    while [ $(get_length "$string") -gt $((max_length - 2)) ]
+    while [ $(GetLength "$string") -gt $((max_length - 2)) ]
     do
         string=${string%?}
     done
@@ -32,7 +32,7 @@ function shorten_string() {
 }
 
 ###
-function get_ratio_to_800px() {
+function GetRatioTo800px() {
     local cover="$1"
     W=$( sips -g pixelWidth  $cover | awk '/pixelWidth/{print $2}' )
     H=$( sips -g pixelHeight $cover | awk '/pixelHeight/{print $2}' )
@@ -41,37 +41,37 @@ function get_ratio_to_800px() {
     echo $ratio
 }
 
-function isPlaying() {
+function IsPlaying() {
+    IS_PLAYING=""
     PLAYER_STATE=$(osascript -e 'tell application "Music" to get player state')
-    if [ "$PLAYER_STATE" = "playing" ]; then
-        echo true
-    else
-        echo false
-    fi
+    case "$PLAYER_STATE" in
+        "stopped") return ;;
+        "playing") IS_PLAYING=true ;;
+        "paused")  IS_PLAYING=false ;;
+        *)         echo " Update(): Unknown player state: $PLAYER_STATE"; exit ;;
+    esac
+    echo $IS_PLAYING
 }
 
 ###
-update ()
+function Update ()
 {
     # connecting_msg is dependent on the language of system
-    echo "@Debug: music.sh::update()"
+    echo "@Debug: music.sh::Update()"
     RUNNING=$(osascript -e 'application "Music" is running')
     if ! $RUNNING ; then
-        echo " update(): Music.app is not running"
-        close
+        echo "RUNNING:      $RUNNING"
+        args+=( --set music      icon.color=${WHITE})
+        args+=( --set mini_bg    drawing=off)
+        args+=( --set mini_cover drawing=off)
+        args+=( --set mini_wave  drawing=off)
+        sketchybar "${args[@]}"
         exit
     fi
 
-    PLAYER_STATE=$(osascript -e 'tell application "Music" to get player state')
-    echo "PLAYER_STATE: $PLAYER_STATE"
-    if [ "$PLAYER_STATE" = "stopped" ]; then
-        return
-    elif [ "$PLAYER_STATE" = "playing" ]; then
-        PLAYING=true
-    elif [ "$PLAYER_STATE" = "paused" ]; then
-        PLAYING=false
-    else
-        echo " update(): Unknown player state: $PLAYER_STATE"
+    IS_PLAYING=$(IsPlaying)
+    if [ -z "$IS_PLAYING" ]; then
+        echo " Update(): Abort Update due to player state: "
         exit
     fi
 
@@ -80,91 +80,83 @@ update ()
     ALBUM=$(osascript -e 'tell application "Music" to get album of current track')
 
     if [ "$TRACK" = "$CONNECTING_MSG" ] || [ "$TRACK" = "" ] ; then
-        echo " update(): Connecting to iTunes... retrying in 1 second"
+        echo " Update(): Connecting to iTunes... retrying in 1 second"
         sleep 1
-        update
+        Update
         exit
     fi
 
-    TRACK=$(shorten_string "$TRACK" 18)
-    ARTIST=$(shorten_string "$ARTIST" 23)
-    ALBUM=$(shorten_string "$ALBUM" 23)
+    TRACK=$(ShortenString "$TRACK" 18)
+    ARTIST=$(ShortenString "$ARTIST" 23)
+    ALBUM=$(ShortenString "$ALBUM" 23)
 
-    echo "==========================="
-    echo "RUNNING:      $RUNNING"
-    echo "PLAYER_STATE: $PLAYER_STATE"
-    echo "PLAYING:      $PLAYING"
+    echo "---------------------------"
+    echo "IS_PLAYING:   $IS_PLAYING"
     echo "TRACK:        $TRACK"
     echo "ARTIST:       $ARTIST"
     echo "ALBUM:        $ALBUM"
     echo ""
 
     args=()
+    [ "$ARTIST" == "" ] && ARTIST="Podcast"
+    args+=(--set music.title  label="$TRACK"  drawing=on)
+    args+=(--set music.artist label="$ARTIST" drawing=on)
+    args+=(--set music.album  label="$ALBUM"  drawing=on)
+
     rm -f /tmp/cover.*
     osascript "$HOME/.config/sketchybar/addone/${this_dir}/get_artwork.scpt"
-    COVER="/tmp/cover.jpg"
-    if [ -f "/tmp/cover.png" ]; then
-        COVER="/tmp/cover.png"
-    fi
-
-    ratio=$( get_ratio_to_800px $COVER )
-    scale=$( echo "scale=4; $ratio*$PRE_SCALE" | bc )
-
-    args+=( --set mini_cover background.image=$COVER)
+    [ -f "/tmp/cover.png" ] && COVER="/tmp/cover.png" || COVER="/tmp/cover.jpg"
+    ratio=$(GetRatioTo800px $COVER)
+    scale=$(echo "scale=4; $ratio*$PRE_SCALE" | bc)
+    args+=( --set mini_cover  background.image=$COVER)
     args+=( --set music.cover background.image=$COVER )
+    args+=( --set music.cover background.image.drawing=off)
     args+=( --set music.cover background.image.scale=$scale)
 
-    if [ "$ARTIST" == "" ]; then
-        args+=( --set music.title   label="$TRACK"  drawing=on \
-                --set music.artist  label="$ALBUM"  drawing=on \
-                --set music.album   label="Podcast" drawing=on )
-    else
-        args+=(--set music.title   label="$TRACK"   drawing=on \
-               --set music.artist  label="$ARTIST"  drawing=on \
-               --set music.album   label="$ALBUM"   drawing=on )
-    fi
-
-    # Show popup when state change
-    args+=( --set music drawing=on )
-
-    if ! $PLAYING ; then
+    if ! $IS_PLAYING ; then
         args+=( --set music         icon.color=${WHITE})
         args+=( --set mini_bg       drawing=off)
         args+=( --set mini_cover    drawing=off)
         args+=( --set mini_wave     drawing=off)
-        args+=( --set music.cover   icon.drawing=on                  \
-                                    icon.background.drawing=on       )
-
+        args+=( --set music.cover   icon.drawing=on)
+        args+=( --set music.cover   icon.background.drawing=on)
     else
         args+=( --set music         icon.color=${notch_icon_color})
         args+=( --set mini_bg       drawing=on)
         args+=( --set mini_cover    drawing=on)
         args+=( --set mini_wave     drawing=on)
-        args+=( --set music.cover   icon.drawing=off                 \
-                                    icon.background.drawing=off    )
+        args+=( --set music.cover   icon.drawing=off)
+        args+=( --set music.cover   icon.background.drawing=off)
     fi
 
     sketchybar "${args[@]}"
-    setup
+
+    FadeIn
+    FadeOut
+}
+
+###
+FadeIn () {
+    sketchybar --set music.cover icon.drawing=on
     popup on
-    fade_out
-}
-
-###
-setup() {
-    sketchybar --animate tanh 20 \
-                --set music popup.background.color=$POPUP_BACKGROUND_COLOR    \
-                --set music.title  label.color=$LABEL_COLOR \
-                --set music.artist label.color=$LABEL_COLOR \
-                --set music.album  label.color=$LABEL_COLOR \
-                --set music.cover  icon.color=$WHITE\
-                --set music.cover  icon.background.color=0x8a3a3a3a
+    sketchybar --animate tanh 20 --set music popup.background.color=$POPUP_BACKGROUND_COLOR
     sleep 0.4
+    sketchybar --set music.cover background.color=$POPUP_BACKGROUND_COLOR
     sketchybar --set music.cover background.image.drawing=on
+
+    isPlay=$(IsPlaying)
+    $isPlay && sketchybar --set music.cover icon.drawing=off
+
+    sketchybar --animate tanh 25 --set music.title  label.color=$LABEL_COLOR \
+               --animate tanh 25 --set music.artist label.color=$LABEL_COLOR \
+               --animate tanh 25 --set music.album  label.color=$LABEL_COLOR \
+               --animate tanh 25 --set music.cover   icon.color=$WHITE\
+               --animate tanh 25 --set music.cover  icon.background.color=0x8a3a3a3a\
+               --animate tanh 25 --set music.cover  background.color=$TRANSPARENT
 }
 
 ###
-fade_out () {
+FadeOut () {
     $isDebug && exit
     sleep $KEEP_SHOWING_TIME
     sketchybar --animate tanh 25 --set music.title  label.color=$TRANSPARENT \
@@ -181,10 +173,10 @@ fade_out () {
     sleep 0.7
     popup off
 
-    isPlay=$(isPlaying)
-    $isPlay && sketchybar --set music.cover icon.drawing=off 
+    isPlay=$(IsPlaying)
+    $isPlay && sketchybar --set music.cover icon.drawing=off
 
-    exit
+    exit 0
 }
 
 ###
@@ -195,19 +187,20 @@ playpause ()
 }
 
 ###
-playpauseOrActivate () {
-echo "@Debug: music.sh::playpauseOrActivate()"
+PlaypauseOrActivate () {
+echo "@Debug: music.sh::PlaypauseOrActivate()"
 osascript << EOF
     tell application "Music"
     set stat to (get player state)
-    if stat is stopped then 
-        activate 
+    if stat is stopped then
+        activate
     else
         playpause
     end if
     end tell
 EOF
 }
+
 ###
 close ()
 {
@@ -222,11 +215,11 @@ close ()
 mouse_clicked () {
     echo "@Debug: music.sh::mouse_clicked()"
     case "$NAME" in
-        "music.cover") 
+        "music.cover")
             playpause
             ;;
-        "music") 
-            playpauseOrActivate
+        "music")
+            PlaypauseOrActivate
             ;;
         *) exit
             ;;
@@ -239,35 +232,31 @@ popup () {
 }
 
 
-echo "==========================="
+echo "=====================Script Activate============================"
 echo "$(date)"
 echo "Start plugins/music.sh [SENDER: $SENDER] [NAME: $NAME]"
-echo "$INFO" | jq 
+# echo "$INFO" | jq
 case "$SENDER" in
     "mouse.clicked")
-        echo "@Debug: music.sh::mouse_clicked()"
         mouse_clicked
         ;;
     "mouse.entered")
-        echo "@Debug: music.sh::mouse_entered()"
-        setup
-        popup on
+        FadeIn
         ;;
     "mouse.exited"|"mouse.exited.global")
-        echo "@Debug: music.sh::mouse_exited()"
-        fade_out
+        FadeOut
         ;;
     *)
-        echo "@Debug: music.sh::DEFAULT()"
-        $isDebug && debug_func || update
+        $isDebug && DebugFunc || Update
         ;;
 esac
+echo ""
 
 sleep $ENTER_TIMEOUT
-fade_out
+FadeOut
 
-debug_func () {
-    echo "@Debug: music.sh::debug_func()"
+DebugFunc () {
+    echo "@Debug: music.sh::DebugFunc()"
     # args+=( --set music.cover background.image=$COVER )
     # args+=( --set music.cover background.image.scale=$scale)
     TRACK="ABCDEFGHIJKLMN"
@@ -287,6 +276,5 @@ debug_func () {
     args+=( --set music drawing=on )
 
     sketchybar "${args[@]}"
-    setup
-    popup on
+    FadeIn
 }
