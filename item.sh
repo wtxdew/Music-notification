@@ -7,9 +7,9 @@ music_plugin="$HOME/.config/sketchybar/addone/${this_dir}/plugin.sh"
 
 music=(
     width=186
-    drawing=off
+    drawing=on
     script="$music_plugin"
-    click_script="$playpause"
+    # click_script="$playpauseOrGotoMusic"
     icon=􀑪
     icon.y_offset=2
     icon.padding_left=0
@@ -157,6 +157,7 @@ sketchybar  --add   event           music_change     $music_event    \
             --add   event           music_launched                   \
             --subscribe music       mouse.entered       mouse.exited \
                                     mouse.exited.global              \
+            --subscribe music       mouse.clicked                    \
             --subscribe music.cover mouse.clicked                    \
             --subscribe music.cover music_change
            # --subscribe music.cover  music_launched

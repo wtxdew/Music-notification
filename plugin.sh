@@ -195,12 +195,26 @@ playpause ()
 }
 
 ###
+playpauseOrActivate () {
+echo "@Debug: music.sh::playpauseOrActivate()"
+osascript << EOF
+    tell application "Music"
+    set stat to (get player state)
+    if stat is stopped then 
+        activate 
+    else
+        playpause
+    end if
+    end tell
+EOF
+}
+###
 close ()
 {
     echo "@Debug: music.sh::close()"
     sketchybar  --set music.title drawing=off \
                 --set music.artist drawing=off \
-                --set music drawing=off popup.drawing=off
+                --set music popup.drawing=off
     exit 0
 }
 
@@ -210,6 +224,9 @@ mouse_clicked () {
     case "$NAME" in
         "music.cover") 
             playpause
+            ;;
+        "music") 
+            playpauseOrActivate
             ;;
         *) exit
             ;;
