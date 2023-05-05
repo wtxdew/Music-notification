@@ -3,7 +3,6 @@ source "$HOME/.config/sketchybar/addone/${this_dir}/config.sh"
 music_plugin="$HOME/.config/sketchybar/addone/${this_dir}/plugin.sh"
 
 # click_script 
-playpause="osascript -e 'tell application \"Music\" to playpause'"
 activate_music="osascript -e 'tell application \"Music\" to activate'"
 goto_music_page="osascript -e 'tell application \"Music\" to (reveal current track) activate'"
 
@@ -123,7 +122,7 @@ mini_wave=(
     icon.align=center
     icon.padding_left=0
     icon.padding_right=0
-    icon.color=$notch_icon_color
+    icon.color=$WHITE
     icon.font="$FONT:Regular:22.0"
     label.drawing=off
     background.drawing=on
