@@ -137,10 +137,15 @@ function Update ()
 
 ###
 FadeIn () {
+    track_value=$(sketchybar --query music.title | jq -r ".label.value")
+    if [ "$track_value" = "\"$CONNECTING_MSG\"" ] || [ "$track_value" = "" ] ; then
+        echo " FadeIn(): Abort FadeIn due to not playing"
+        exit
+    fi
     sketchybar --set music.cover icon.drawing=on
     popup on
     sketchybar --animate tanh 20 --set music popup.background.color=$POPUP_BACKGROUND_COLOR
-    sleep 0.4
+    sleep 0.1
     sketchybar --set music.cover background.color=$POPUP_BACKGROUND_COLOR
     sketchybar --set music.cover background.image.drawing=on
 

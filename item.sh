@@ -1,15 +1,16 @@
 this_dir=dev
-source "$HOME/.config/sketchybar/addone/${this_dir}/config.sh" # Loads all defined variables
-music_event="com.apple.Music.playerInfo"
-goto_music_page="osascript -e 'tell application \"Music\" to (reveal current track) activate'"
-playpause="osascript -e 'tell application \"Music\" to playpause'"
+source "$HOME/.config/sketchybar/addone/${this_dir}/config.sh" 
 music_plugin="$HOME/.config/sketchybar/addone/${this_dir}/plugin.sh"
+
+# click_script 
+playpause="osascript -e 'tell application \"Music\" to playpause'"
+activate_music="osascript -e 'tell application \"Music\" to activate'"
+goto_music_page="osascript -e 'tell application \"Music\" to (reveal current track) activate'"
 
 music=(
     width=186
     drawing=on
     script="$music_plugin"
-    # click_script="$playpauseOrGotoMusic"
     icon=􀑪
     icon.y_offset=2
     icon.padding_left=0
@@ -132,6 +133,7 @@ mini_wave=(
     background.padding_right=0
     background.corner_radius=8
     background.color=$TRUE_BLACK
+    click_script="$activate_music"
 )
 
 
@@ -153,14 +155,13 @@ sketchybar  --add   item            mini_bg         q  \
             --set   mini_cover      "${mini_cover[@]}" \
             --set   mini_wave       "${mini_wave[@]}"
 
+music_event="com.apple.Music.playerInfo"
 sketchybar  --add   event           music_change     $music_event    \
-            --add   event           music_launched                   \
             --subscribe music       mouse.entered       mouse.exited \
                                     mouse.exited.global              \
             --subscribe music       mouse.clicked                    \
             --subscribe music.cover mouse.clicked                    \
             --subscribe music.cover music_change
-           # --subscribe music.cover  music_launched
            
 
 
