@@ -32,7 +32,6 @@ music=(
 )
 
 cover=(
-    script="$music_plugin"
     label.drawing=off
     icon="􀊄"
     icon.drawing=off
@@ -51,6 +50,7 @@ cover=(
     background.padding_left=5
     background.padding_right=10
     background.image.scale=$PRE_SCALE
+    click_script="osascript -e 'tell application "Music" to playpause'"
 )
 
 info=(
@@ -156,11 +156,9 @@ sketchybar  --add   item            mini_bg         q  \
 
 music_event="com.apple.Music.playerInfo"
 sketchybar  --add   event           music_change     $music_event    \
+            --add   event           music_launched                   \
             --subscribe music       mouse.entered       mouse.exited \
                                     mouse.exited.global              \
             --subscribe music       mouse.clicked                    \
-            --subscribe music.cover mouse.clicked                    \
-            --subscribe music.cover music_change
-           
-
-
+            --subscribe music       music_launched                   \
+            --subscribe music       music_change
