@@ -157,7 +157,6 @@ function Update () {
         exit
     fi
 
-    toggle_mini_bar on
     PLAYER_STATE=$(osascript -e 'tell application "Music" to get player state')
     case "$PLAYER_STATE" in
         "stopped")
@@ -172,6 +171,7 @@ function Update () {
             echo " Update(): Unknown player state: $PLAYER_STATE"
             exit ;;
     esac
+    toggle_mini_bar on
 
     TRACK=$(osascript -e 'tell application "Music" to get name of current track')
     ARTIST=$(osascript -e 'tell application "Music" to get artist of current track')
