@@ -201,9 +201,19 @@ function Update () {
     args+=(--set music.artist label="$ARTIST" drawing=on)
     args+=(--set music.album  label="$ALBUM"  drawing=on)
 
+    b_has_cover=false
     rm -f /tmp/cover.*
-    osascript "$HOME/.config/sketchybar/addone/${this_dir}/get_artwork.scpt"
-    [ -f "/tmp/cover.png" ] && COVER="/tmp/cover.png" || COVER="/tmp/cover.jpg"
+    while ( b_has_cover==false ) ; do
+        osascript "$HOME/.config/sketchybar/addone/${this_dir}/get_artwork.scpt"
+        if [ -f "/tmp/cover.png" ]; then
+            COVER="/tmp/cover.png" 
+            b_has_cover=true
+        elif [ -f "/tmp/cover.jpg" ]; then
+            COVER="/tmp/cover.jpg"
+            b_has_cover=true
+        fi
+    done
+
     ratio=$(GetRatioTo800px $COVER)
     scale=$(echo "scale=4; $ratio*$PRE_SCALE" | bc)
     args+=( --set mini_cover  background.image=$COVER)
