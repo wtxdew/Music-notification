@@ -24,10 +24,10 @@ TRUE_MAGENTA=0xffff00ff     # #ff00ff
 TRUE_YELLOW=0xffffff00      # #ffff00
 TRUE_CYAN=0xff00ffff        # #00ffff
 
+debug_red=0x7aff0000         # #ff0000
+debug_blue=0x7a0000ff         # #ff0000
 
-notch_bg_color=${TRUE_BLACK}
-# notch_bg_color=${MAGENTA}
-# notch_icon_color=0xffff66666
-notch_icon_color=${TRUE_RED}
+notch_bg_color=${MAGENTA}
+notch_icon_color=0xffff66666
 cover_icon_color_df=${TRUE_WHITE}
 cover_icon_bg_color_df=0x8a3a3a3a 

@@ -1,9 +1,9 @@
 this_dir=dev
-source "$HOME/.config/sketchybar/addone/${this_dir}/config.sh" 
+source "$HOME/.config/sketchybar/addone/${this_dir}/config.sh"
 music_plugin="$HOME/.config/sketchybar/addone/${this_dir}/plugin.sh"
 
-# click_script 
-activate_music="osascript -e 'tell application \"Music\" to activate'"
+# click_script
+activate_music="osascript -e 'tell application \"Music\" to activate' && open /System/Applications/Music.app"
 goto_music_page="osascript -e 'tell application \"Music\" to (reveal current track) activate'"
 
 music=(
@@ -31,7 +31,19 @@ music=(
     popup.background.corner_radius=5
 )
 
+popup_dummy=(
+    width=0
+    drawing=on
+    popup.height=120
+    popup.y_offset=370
+    popup.align=right
+    popup.horizontal=on
+    popup.background.border_width=0
+    popup.background.corner_radius=5
+)
+
 cover=(
+    drawing=on
     label.drawing=off
     icon="􀊄"
     icon.drawing=off
@@ -45,19 +57,20 @@ cover=(
     icon.padding_left=0
     updates=on
     background.corner_radius=0
-    background.color=$TRANSPARENT
+    background.color=$POPUP_BACKGROUND_COLOR
     background.height=160
     background.padding_left=5
     background.padding_right=10
     background.image.scale=$PRE_SCALE
+    background.image.drawing=on
     click_script="osascript -e 'tell application "Music" to playpause'"
 )
 
 info=(
     width=0
-    drawing=off
+    drawing=on
     icon.drawing=off
-    label.color=$TRANSPARENT
+    label.color=$LABEL_COLOR
     label.padding_left=0
     label.padding_right=0
     label.width=550
@@ -137,15 +150,17 @@ mini_wave=(
 
 
 sketchybar  --add   item            music           center      \
-            --add   item            music.cover     popup.music \
-            --add   item            music.title     popup.music \
-            --add   item            music.artist    popup.music \
-            --add   item            music.album     popup.music \
+            --add   item            popup_dummy     right       \
+            --add   item            music.cover     popup.popup_dummy \
+            --add   item            music.title     popup.popup_dummy \
+            --add   item            music.artist    popup.popup_dummy \
+            --add   item            music.album     popup.popup_dummy \
             --set   music           "${music[@]}"               \
             --set   music.cover     "${cover[@]}"               \
             --set   music.title     "${info[@]}" "${title[@]}"  \
             --set   music.artist    "${info[@]}" "${artist[@]}" \
-            --set   music.album     "${info[@]}" "${album[@]}"
+            --set   music.album     "${info[@]}" "${album[@]}"  \
+            --set   popup_dummy     "${popup_dummy[@]}"
 
 sketchybar  --add   item            mini_bg         q  \
             --add   item            mini_cover      q  \
@@ -153,6 +168,15 @@ sketchybar  --add   item            mini_bg         q  \
             --set   mini_bg         "${mini_bg[@]}"    \
             --set   mini_cover      "${mini_cover[@]}" \
             --set   mini_wave       "${mini_wave[@]}"
+
+sketchybar --add item slider  popup.popup_dummy
+sketchybar --set slider width=455\
+                        drawing=on\
+                        background.color=$TRANSPARENT\
+                        background.height=160\
+                        padding_right=0\
+                        padding_left=-455
+
 
 music_event="com.apple.Music.playerInfo"
 sketchybar  --add   event           music_change     $music_event    \
