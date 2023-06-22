@@ -44,6 +44,40 @@ function GetRatioTo800px() {
 
 ###
 FadeIn () {
+    popup on
+    sketchybar --animate tanh 20 --set popup_dummy popup.background.color=$POPUP_BACKGROUND_COLOR\
+               --animate tanh 20 --set slider background.color=$POPUP_BACKGROUND_COLOR
+    sleep 0.3
+    sketchybar --set music.title  drawing=on\
+               --set music.artist drawing=on\
+               --set music.album  drawing=on\
+               --set music.cover  drawing=on\
+               --set slider      padding_left=-455
+    sleep 0.4
+    sketchybar --animate tanh 25 --set slider background.color=$TRANSPARENT
+}
+
+###
+FadeOut () {
+    $isDebug && exit
+    sleep $KEEP_SHOWING_TIME
+    sketchybar --animate tanh 20 --set slider background.color=$POPUP_BACKGROUND_COLOR
+    sleep 0.4
+    sketchybar --set music.title  drawing=off  \
+               --set music.artist drawing=off \
+               --set music.album  drawing=off \
+               --set music.cover  drawing=off   \
+               --set slider      padding_left=0
+    sleep 0.4
+    sketchybar --animate tanh 20 --set popup_dummy popup.background.color=$TRANSPARENT\
+               --animate tanh 20 --set slider background.color=$TRANSPARENT
+    sleep 0.7
+    popup off
+
+    exit 0
+}
+###
+FadeIn2 () {
     # track_value=$(sketchybar --query music.title | jq -r ".label.value")
     # if [ "$track_value" = "\"$CONNECTING_MSG\"" ] || [ "$track_value" = "" ] ; then
     #     echo " FadeIn(): Abort FadeIn due to not playing"
@@ -51,7 +85,7 @@ FadeIn () {
     # fi
     sketchybar --set music.cover icon.drawing=on
     popup on
-    sketchybar --animate tanh 20 --set music popup.background.color=$POPUP_BACKGROUND_COLOR
+    sketchybar --animate tanh 20 --set popup_dummy popup.background.color=$POPUP_BACKGROUND_COLOR
     sleep 0.1
     sketchybar --set music.cover background.color=$POPUP_BACKGROUND_COLOR
     sketchybar --set music.cover background.image.drawing=on
@@ -68,7 +102,7 @@ FadeIn () {
 }
 
 ###
-FadeOut () {
+FadeOut2 () {
     $isDebug && exit
     sleep $KEEP_SHOWING_TIME
     sketchybar --animate tanh 25 --set music.title  label.color=$TRANSPARENT \
@@ -82,13 +116,45 @@ FadeOut () {
     sketchybar --set music.cover icon.drawing=on
     sketchybar --set music.cover background.image.drawing=off
     sketchybar --set music.cover background.color=$TRANSPARENT
-    sketchybar --animate tanh 20 --set music popup.background.color=$TRANSPARENT
+    sketchybar --animate tanh 20 --set popup_dummy popup.background.color=$TRANSPARENT
     sleep 0.7
     popup off
 
     PLAYER_STATE=$(osascript -e 'tell application "Music" to get player state')
     [ $PLAYER_STATE = "playing" ] && sketchybar --set music.cover icon.drawing=off
 
+    exit 0
+}
+
+###
+SlideIn() {
+    popup on
+    sketchybar --animate tanh 20 --set slider width=455
+    sleep 0.3
+    sketchybar --set music.title  drawing=on   \
+               --set music.artist drawing=on   \
+               --set music.album  drawing=on   \
+               --set music.cover  drawing=on   \
+               --set slider      padding_left=-455
+    sleep 0.2
+    sketchybar --animate tanh 25 --set slider background.color=$TRANSPARENT
+}
+
+###
+SlideOut() {
+    $isDebug && exit
+    sleep $KEEP_SHOWING_TIME
+    sketchybar --animate tanh 25 --set slider background.color=$POPUP_BACKGROUND_COLOR
+    sleep 0.2
+    sketchybar --set music.title  drawing=off   \
+               --set music.artist drawing=off   \
+               --set music.album  drawing=off   \
+               --set music.cover  drawing=off   \
+               --set slider      padding_left=0
+    sleep 0.2
+    sketchybar --animate tanh 20 --set slider width=0
+    sleep 0.7
+    popup off
     exit 0
 }
 
@@ -107,7 +173,7 @@ PlaypauseOrActivate () {
 
 ###
 popup () {
-    sketchybar --set music popup.drawing=$1
+    sketchybar --set popup_dummy popup.drawing=$1
 }
 
 ###
@@ -129,13 +195,13 @@ mouse_entered() {
         echo " mouse_entered(): Abort due to not running"
         exit
     fi
-    PLAYER_STATE=$(osascript -e 'tell application "Music" to get player state')
-    if [ ! $PLAYER_STATE = "playing" ] ; then
-        echo " mouse_entered(): Abort due to not playing"
-        exit
-    fi
+    # PLAYER_STATE=$(osascript -e 'tell application "Music" to get player state')
+    # if [ ! $PLAYER_STATE = "playing" ] ; then
+    #     echo " mouse_entered(): Abort due to not playing"
+    #     exit
+    # fi
 
-    FadeIn
+    SlideIn
 }
 
 ###
@@ -149,7 +215,7 @@ function toggle_mini_bar () {
 ###
 function Update () {
     # connecting_msg is dependent on the language of system
-    echo " Update() "
+    echo " Update(): Start."
     RUNNING=$(osascript -e 'application "Music" is running')
     if ! $RUNNING ; then
         echo " Update(): Music.app Not Running - Exit"
@@ -197,20 +263,21 @@ function Update () {
 
     args=()
     [ "$ARTIST" == "" ] && ARTIST="Podcast"
-    args+=(--set music.title  label="$TRACK"  drawing=on)
-    args+=(--set music.artist label="$ARTIST" drawing=on)
-    args+=(--set music.album  label="$ALBUM"  drawing=on)
+    args+=(--set music.title  label="$TRACK"  )
+    args+=(--set music.artist label="$ARTIST" )
+    args+=(--set music.album  label="$ALBUM"  )
 
-    b_has_cover=false
     rm -f /tmp/cover.*
-    while ( b_has_cover==false ) ; do
+    COVER=""
+    while [ -z "$COVER" ] ; do
         osascript "$HOME/.config/sketchybar/addone/${this_dir}/get_artwork.scpt"
         if [ -f "/tmp/cover.png" ]; then
             COVER="/tmp/cover.png" 
-            b_has_cover=true
         elif [ -f "/tmp/cover.jpg" ]; then
             COVER="/tmp/cover.jpg"
-            b_has_cover=true
+        else
+            echo " Update(): No cover found - retrying in 1 second"
+            sleep 1
         fi
     done
 
@@ -218,26 +285,32 @@ function Update () {
     scale=$(echo "scale=4; $ratio*$PRE_SCALE" | bc)
     args+=( --set mini_cover  background.image=$COVER)
     args+=( --set music.cover background.image=$COVER )
-    args+=( --set music.cover background.image.drawing=off)
+    args+=( --set music.cover background.color=$TRANSPARENT)
+    args+=( --set music.cover background.image.drawing=on)
     args+=( --set music.cover background.image.scale=$scale)
 
     if ! $IS_PLAYING ; then
         args+=( --set music         icon.color=${WHITE})
         args+=( --set mini_wave     icon.color=${WHITE})
-        args+=( --set music.cover   icon.drawing=on)
-        args+=( --set music.cover   icon.background.drawing=on)
+        # args+=( --set music.cover   icon.drawing=on)
+        # args+=( --set music.cover   icon.background.drawing=on)
     else
         args+=( --set music         icon.color=${notch_icon_color})
         args+=( --set mini_wave     icon.color=${notch_icon_color})
-        args+=( --set music.cover   icon.drawing=off)
-        args+=( --set music.cover   icon.background.drawing=off)
+        # args+=( --set music.cover   icon.drawing=off)
+        # args+=( --set music.cover   icon.background.drawing=off)
     fi
 
     sketchybar "${args[@]}"
+    echo " Update(): Done"
 
     if  $IS_PLAYING ; then
-        FadeIn
-        FadeOut
+        # FadeIn
+        # FadeOut
+        SlideIn
+        SlideOut
+    else
+        SlideIn
     fi
 }
 
@@ -251,7 +324,7 @@ case "$SENDER" in
         mouse_entered
         ;;
     "mouse.exited"|"mouse.exited.global")
-        FadeOut
+        SlideOut
         ;;
     *)
         $isDebug && DebugFunc || Update
@@ -260,7 +333,7 @@ esac
 echo ""
 
 sleep $ENTER_TIMEOUT
-FadeOut
+SlideOut
 
 DebugFunc () {
     echo "@Debug: music.sh::DebugFunc()"
